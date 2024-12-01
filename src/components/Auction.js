@@ -5,6 +5,7 @@ import axios from "axios";
 import Pusher from "pusher-js";
 import { fetchAuctions } from "../api/auction"; // Assume these are utility functions for API calls
 import { getToken } from "../api/token";
+import "../css/Auction.css";  // Import the CSS file
 
 const API_URL = process.env.REACT_APP_API_URL;
 
