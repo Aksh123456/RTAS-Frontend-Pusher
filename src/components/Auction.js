@@ -3,13 +3,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import Pusher from "pusher-js";
-import { fetchAuctions } from "../api/auction"; 
+import { fetchAuctions } from "../api/auction";
 import { getToken } from "../api/token";
-import "../css/Auction.css";  
+import "../css/Auction.css";
 
 const API_URL = process.env.REACT_APP_API_URL;
-
-
 
 const Auction = () => {
   const [auctions, setAuctions] = useState([]);
@@ -17,32 +15,27 @@ const Auction = () => {
 
   const decodedRef = useRef(null);
 
-
   useEffect(() => {
-    
     const pusher = new Pusher(process.env.REACT_APP_PUSHER_KEY, {
       cluster: process.env.REACT_APP_PUSHER_CLUSTER,
     });
 
-    
     const channel = pusher.subscribe("auction-channel");
 
-    
     const fetchAuctionData = async () => {
       try {
-        const token = getToken(); 
+        const token = getToken();
         if (!token) {
           alert("You need to login to view the auction.");
           return;
         }
 
-        
         const decoded = JSON.parse(atob(token.split(".")[1]));
         decodedRef.current = decoded;
 
-        const auctionData = await fetchAuctions(); 
+        const auctionData = await fetchAuctions();
         const processedAuctionData = auctionData.map((auction) => ({
-          id: auction._id, 
+          id: auction._id,
           product: auction.product,
           currentBid: auction.currentBid,
           highestBidder: auction.highestBidder,
@@ -62,11 +55,10 @@ const Auction = () => {
       }
     };
 
-    
     fetchAuctionData();
 
-  
     channel.bind("update", (data) => {
+      console.log(data, 'updateeeeeeeeeeeeeee')
       setAuctions((prevAuctions) =>
         prevAuctions.map((auction) =>
           auction.id === data.auctionId ? { ...auction, ...data } : auction
@@ -100,22 +92,20 @@ const Auction = () => {
       );
     });
 
-    
     return () => {
       channel.unbind_all();
       channel.unsubscribe();
     };
   }, []);
 
-
-    const placeBid = async (auctionId) => {
+  const placeBid = async (auctionId) => {
     console.log(auctionId, "iddddd");
     const auction = auctions.find((a) => a.id === auctionId);
     if (!auction || !auction.isPlaceBidActive) {
       alert("Bidding is currently disabled.");
       return;
     }
-
+    console.log(auction, "acution", auction.currentBid);
     const bidAmount = auction.currentBid + 5;
     const token = getToken();
 
@@ -125,7 +115,6 @@ const Auction = () => {
     }
 
     try {
-
       const response = await axios.post(
         `${API_URL}/auction/place-bid`,
         {
@@ -140,14 +129,12 @@ const Auction = () => {
         }
       );
       console.log(response, "responsesssss");
-
     } catch (error) {
       console.error("Error placing bid:", error);
       alert("Failed to place bid.");
     }
   };
 
-  
   const buyNow = async (auctionId) => {
     const auction = auctions.find((a) => a.id === auctionId);
     if (auction) {
@@ -177,7 +164,6 @@ const Auction = () => {
     }
   };
 
-
   useEffect(() => {
     const updateTimers = () => {
       const currentTime = new Date().getTime();
@@ -190,10 +176,9 @@ const Auction = () => {
             newTimeLeft[auction.id] = remainingTime > 0 ? remainingTime : 0;
 
             if (remainingTime <= 0 && auction.buyNowActive) {
+              console.log("byunodw eeeeeeeeeeeeeeeeeee");
 
-              console.log('byunodw eeeeeeeeeeeeeeeeeee')
-              
-          fetch(`${API_URL}/auction/buy-now-expired`, {
+              fetch(`${API_URL}/auction/buy-now-expired`, {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
@@ -256,7 +241,7 @@ const Auction = () => {
             >
               Place Bid
             </button>
-{/*
+            {/*
             {auction.buyNowActive &&
               decodedRef.current?.email === auction.highestBidder && (
                 <div>
@@ -276,7 +261,7 @@ const Auction = () => {
                 </div>
               )} */}
 
-{auction.buyNowActive &&
+            {auction.buyNowActive &&
               decodedRef.current?.email === auction.highestBidder && (
                 <div>
                   <button
@@ -311,6 +296,5 @@ const Auction = () => {
     </div>
   );
 };
-
 
 export default Auction;
